@@ -1,123 +1,82 @@
-import io
-import math
-from typing import Optional
+from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
 
-st.set_page_config(page_title='Engineering BOM Intelligence', layout='wide')
-
-st.title('🏗️ Engineering BOM Intelligence')
-st.caption('Generate BOM, estimate cost, and spot simple optimization opportunities.')
-
-DEFAULT_CSV = """item,familia,tipo,largura_mm,altura_mm,profundidade_mm,quantidade,material,custo_unitario_m2,perda_percentual
-BASE,GONDOLA,PAINEL,1000,2200,18,2,MDP BRANCO TX,95,3
-PRATELEIRA,GONDOLA,PRATELEIRA,900,300,18,8,MDP BRANCO TX,95,3
-LATERAL,GONDOLA,LATERAL,400,2200,18,2,MDP BRANCO TX,95,3
-RODAPE,GONDOLA,RODAPE,1000,100,18,1,MDP BRANCO TX,95,3
-PORTA ETIQUETA,ACESSORIO,PERFIL,900,35,1,8,PVC,18,0
-"""
+from bom_engine import (
+    calculate_bom,
+    calculate_metrics,
+    optimization_notes,
+    summarize_materials,
+)
 
 
-def load_dataframe(uploaded_file: Optional[io.BytesIO]) -> pd.DataFrame:
+st.set_page_config(page_title="Engineering BOM Intelligence", layout="wide")
+
+st.title("Engineering BOM Intelligence")
+st.caption("Deterministic material, consumption and estimated-cost analysis for engineering BOMs")
+
+
+def load_source(uploaded_file: object | None) -> pd.DataFrame:
     if uploaded_file is None:
-        return pd.read_csv(io.StringIO(DEFAULT_CSV))
-    if uploaded_file.name.lower().endswith('.xlsx'):
+        raise ValueError("Upload a CSV or XLSX file to begin the analysis")
+    name = str(getattr(uploaded_file, "name", "")).lower()
+    if name.endswith(".xlsx"):
         return pd.read_excel(uploaded_file)
     return pd.read_csv(uploaded_file)
 
 
-def calculate_bom(df: pd.DataFrame) -> pd.DataFrame:
-    work = df.copy()
-    numeric_cols = [
-        'largura_mm', 'altura_mm', 'profundidade_mm', 'quantidade',
-        'custo_unitario_m2', 'perda_percentual'
-    ]
-    for col in numeric_cols:
-        work[col] = pd.to_numeric(work[col], errors='coerce').fillna(0)
+st.info(
+    "This application uses deterministic formulas. The review notes are rule-based and the "
+    "estimated costs are not production quotations."
+)
 
-    work['area_m2_unit'] = (work['largura_mm'] * work['altura_mm']) / 1_000_000
-    work['area_m2_total'] = work['area_m2_unit'] * work['quantidade']
-    work['area_m2_com_perda'] = work['area_m2_total'] * (1 + work['perda_percentual'] / 100)
-    work['custo_total_estimado'] = work['area_m2_com_perda'] * work['custo_unitario_m2']
-    work['volume_m3_total'] = (
-        work['largura_mm'] * work['altura_mm'] * work['profundidade_mm'] * work['quantidade']
-    ) / 1_000_000_000
-    return work
+uploaded = st.file_uploader("Upload a CSV or XLSX BOM", type=["csv", "xlsx"])
 
-
-def material_summary(df: pd.DataFrame) -> pd.DataFrame:
-    grouped = (
-        df.groupby('material', dropna=False)[['quantidade', 'area_m2_com_perda', 'custo_total_estimado']]
-        .sum()
-        .reset_index()
-        .sort_values('custo_total_estimado', ascending=False)
+if uploaded is None:
+    st.markdown(
+        "The expected schema is documented in the repository README. "
+        "No engineering dimensions or cost tables are bundled with this public prototype."
     )
-    return grouped
+    st.stop()
 
+try:
+    source = load_source(uploaded)
+    calculated = calculate_bom(source)
+except (ValueError, OSError, pd.errors.ParserError) as error:
+    st.error(f"Input validation failed: {error}")
+    st.stop()
 
-def optimization_notes(df: pd.DataFrame) -> list[str]:
-    notes = []
-    waste_items = df[df['perda_percentual'] > 5]
-    if not waste_items.empty:
-        notes.append(
-            f"{len(waste_items)} item(ns) com perda acima de 5%. Vale revisar plano de corte e padronização dimensional."
-        )
+metrics = calculate_metrics(calculated)
+summary = summarize_materials(calculated)
 
-    expensive = df.sort_values('custo_total_estimado', ascending=False).head(3)
-    if not expensive.empty:
-        top_names = ', '.join(expensive['item'].astype(str).tolist())
-        notes.append(f"Itens de maior impacto no custo: {top_names}.")
+metric_cost, metric_units, metric_materials, metric_rows = st.columns(4)
+metric_cost.metric("Estimated cost", f"R$ {metrics.estimated_cost:,.2f}")
+metric_units.metric("Component units", f"{metrics.component_units:,.0f}")
+metric_materials.metric("Materials", metrics.distinct_materials)
+metric_rows.metric("Source rows", metrics.source_rows)
 
-    thin_parts = df[df['profundidade_mm'] < 10]
-    if not thin_parts.empty:
-        notes.append(
-            'Há componentes muito finos. Confira se eles devem entrar como área, comprimento ou acessório unitário.'
-        )
+source_tab, calculated_tab, summary_tab, review_tab = st.tabs(
+    ["Source", "Calculated BOM", "Material summary", "Review flags"]
+)
 
-    repeated_materials = df['material'].nunique()
-    if repeated_materials > 4:
-        notes.append(
-            'Muitos materiais diferentes no projeto. Menos variação costuma simplificar compras e produção.'
-        )
+with source_tab:
+    st.dataframe(source, use_container_width=True)
 
-    if not notes:
-        notes.append('Estrutura está enxuta. Próximo passo: integrar tabela de preços reais e regras por família de produto.')
-    return notes
+with calculated_tab:
+    st.dataframe(calculated, use_container_width=True)
 
+with summary_tab:
+    st.dataframe(summary, use_container_width=True)
 
-uploaded = st.file_uploader('Upload CSV ou XLSX de projeto', type=['csv', 'xlsx'])
-source_df = load_dataframe(uploaded)
+with review_tab:
+    for note in optimization_notes(calculated):
+        st.write(f"- {note}")
 
-st.subheader('1) Dados de entrada')
-st.dataframe(source_df, use_container_width=True)
-
-bom_df = calculate_bom(source_df)
-summary_df = material_summary(bom_df)
-notes = optimization_notes(bom_df)
-
-st.subheader('2) BOM calculada')
-st.dataframe(bom_df, use_container_width=True)
-
-col1, col2, col3 = st.columns(3)
-with col1:
-    st.metric('Custo total estimado', f"R$ {bom_df['custo_total_estimado'].sum():,.2f}")
-with col2:
-    st.metric('Área total c/ perda', f"{bom_df['area_m2_com_perda'].sum():,.2f} m²")
-with col3:
-    st.metric('Itens totais', f"{int(bom_df['quantidade'].sum())}")
-
-st.subheader('3) Resumo por material')
-st.dataframe(summary_df, use_container_width=True)
-
-st.subheader('4) Insights de otimização')
-for note in notes:
-    st.write(f'- {note}')
-
-csv_output = bom_df.to_csv(index=False).encode('utf-8-sig')
+csv_output = calculated.to_csv(index=False).encode("utf-8-sig")
 st.download_button(
-    'Baixar BOM calculada (CSV)',
+    "Download calculated BOM",
     data=csv_output,
-    file_name='bom_calculada.csv',
-    mime='text/csv'
+    file_name="calculated_bom.csv",
+    mime="text/csv",
 )
