@@ -1,5 +1,7 @@
 # Engineering BOM Intelligence
 
+[![Tests](https://github.com/Sembla/Engineering-BOM-Intelligence/actions/workflows/tests.yml/badge.svg)](https://github.com/Sembla/Engineering-BOM-Intelligence/actions/workflows/tests.yml)
+
 A tested Python and Streamlit prototype for validating engineering BOM data, calculating material consumption and estimating cost using explicit measurement rules.
 
 This project is connected to a real engineering problem: area-based materials, linear profiles and unit components cannot be costed with the same formula. The calculation engine therefore supports three measurement bases and keeps the business rules separate from the interface.
@@ -70,6 +72,8 @@ python -m unittest discover -s tests -v
 ```
 
 The tests cover all three cost bases, aggregate metrics, schema validation, invalid values and review flags.
+
+The same test suite runs automatically on every push and pull request through GitHub Actions.
 
 ## Calculation model
 
