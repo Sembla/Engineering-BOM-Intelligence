@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="800"
+viewBox="0 0 1440 800" role="img"
+aria-label="Engineering BOM Intelligence reproducible synthetic demo snapshot">
+  <defs>
+    <linearGradient id="background" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#050914"/>
+      <stop offset="100%" stop-color="#0a1630"/>
+    </linearGradient>
+    <style>
+      .title { fill: #ffffff; font: 700 42px Arial, sans-serif; }
+      .subtitle { fill: #aebbd0; font: 400 22px Arial, sans-serif; }
+      .eyebrow { fill: #c6ff00; font: 700 17px Arial, sans-serif; letter-spacing: 3px; }
+      .metric-label { fill: #9fb0c8; font: 600 19px Arial, sans-serif; }
+      .metric-value { fill: #ffffff; font: 700 46px Arial, sans-serif; }
+      .section { fill: #ffffff; font: 700 26px Arial, sans-serif; }
+      .bar-label { fill: #cbd5e1; font: 600 20px Arial, sans-serif; }
+      .bar-value { fill: #ffffff; font: 700 20px Arial, sans-serif; text-anchor: end; }
+      .note { fill: #9fb0c8; font: 400 17px Arial, sans-serif; }
+      .footer { fill: #dbe5f4; font: 600 17px Arial, sans-serif; }
+    </style>
+  </defs>
+
+  <rect width="1440" height="800" fill="url(#background)"/>
+  <path d="M0 0 H1440 V8 H0 Z" fill="#0057ff"/>
+  <path d="M0 8 H520 V14 H0 Z" fill="#c6ff00"/>
+
+  <text x="90" y="82" class="eyebrow">REPRODUCIBLE PUBLIC EVIDENCE</text>
+  <text x="90" y="137" class="title">Engineering BOM Intelligence</text>
+  <text x="90" y="178" class="subtitle">
+    Deterministic validation of a neutral, fictional CAD-style BOM
+  </text>
+
+
+    <rect x="90" y="225" width="285" height="150" rx="18"
+          fill="#0f1728" stroke="#24324a" stroke-width="2"/>
+    <rect x="90" y="225" width="8" height="150" rx="4" fill="#c6ff00"/>
+    <text x="120" y="275" class="metric-label">BOM rows</text>
+    <text x="120" y="335" class="metric-value">12</text>
+
+
+    <rect x="390" y="225" width="285" height="150" rx="18"
+          fill="#0f1728" stroke="#24324a" stroke-width="2"/>
+    <rect x="390" y="225" width="8" height="150" rx="4" fill="#0057ff"/>
+    <text x="420" y="275" class="metric-label">Component units</text>
+    <text x="420" y="335" class="metric-value">112</text>
+
+
+    <rect x="690" y="225" width="285" height="150" rx="18"
+          fill="#0f1728" stroke="#24324a" stroke-width="2"/>
+    <rect x="690" y="225" width="8" height="150" rx="4" fill="#c6ff00"/>
+    <text x="720" y="275" class="metric-label">Distinct public codes</text>
+    <text x="720" y="335" class="metric-value">12</text>
+
+
+    <rect x="990" y="225" width="285" height="150" rx="18"
+          fill="#0f1728" stroke="#24324a" stroke-width="2"/>
+    <rect x="990" y="225" width="8" height="150" rx="4" fill="#0057ff"/>
+    <text x="1020" y="275" class="metric-label">Rows for review</text>
+    <text x="1020" y="335" class="metric-value">2</text>
+
+
+  <text x="90" y="440" class="section">Data-quality coverage</text>
+
+    <text x="100" y="505" class="bar-label">Dimensions</text>
+    <text x="1245" y="505" class="bar-value">83.3%</text>
+    <rect x="390" y="483" width="740" height="28" rx="14" fill="#18243a"/>
+    <rect x="390" y="483" width="616" height="28" rx="14" fill="#0057ff"/>
+
+
+    <text x="100" y="570" class="bar-label">Finishes</text>
+    <text x="1245" y="570" class="bar-value">91.7%</text>
+    <rect x="390" y="548" width="740" height="28" rx="14" fill="#18243a"/>
+    <rect x="390" y="548" width="679" height="28" rx="14" fill="#c6ff00"/>
+
+
+  <rect x="90" y="625" width="1175" height="68" rx="14"
+        fill="#0f1728" stroke="#24324a" stroke-width="2"/>
+  <text x="115" y="653" class="note">Deterministic review flags</text>
+  <text x="115" y="679" class="footer">2 row(s) have no dimensional attribute. | 1 row(s) have no finish attribute.</text>
+
+  <text x="90" y="750" class="footer">
+    Synthetic public data • deterministic processing • normalized CSV export • UI smoke tests
+  </text>
+  <text x="1350" y="750" class="note" text-anchor="end">
+    No employer or client data
+  </text>
+</svg>

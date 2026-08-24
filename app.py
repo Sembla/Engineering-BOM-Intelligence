@@ -65,9 +65,9 @@ if cad_mode:
         ["CAD source", "Normalized BOM", "Component summary", "Data quality"]
     )
     with source_tab:
-        st.dataframe(source, use_container_width=True)
+        st.dataframe(source, width="stretch")
     with normalized_tab:
-        st.dataframe(normalized, use_container_width=True)
+        st.dataframe(normalized, width="stretch")
     with summary_tab:
         summary = (
             normalized.groupby(["component_type", "material"], dropna=False)
@@ -75,7 +75,7 @@ if cad_mode:
             .reset_index()
             .sort_values("component_units", ascending=False)
         )
-        st.dataframe(summary, use_container_width=True)
+        st.dataframe(summary, width="stretch")
     with review_tab:
         st.write(f"Finish coverage: {quality.finish_coverage_pct:.1f}%")
         st.write(f"Rows requiring dimension review: {quality.review_rows}")
@@ -102,11 +102,11 @@ else:
         ["Source", "Calculated BOM", "Material summary", "Review flags"]
     )
     with source_tab:
-        st.dataframe(source, use_container_width=True)
+        st.dataframe(source, width="stretch")
     with calculated_tab:
-        st.dataframe(calculated, use_container_width=True)
+        st.dataframe(calculated, width="stretch")
     with summary_tab:
-        st.dataframe(summary, use_container_width=True)
+        st.dataframe(summary, width="stretch")
     with review_tab:
         for note in optimization_notes(calculated):
             st.write(f"- {note}")

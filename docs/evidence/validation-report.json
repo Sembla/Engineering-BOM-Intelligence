@@ -1,0 +1,18 @@
+{
+  "source": "data/sample_cad_bom.csv",
+  "data_classification": "synthetic_public_demo",
+  "processing": "deterministic",
+  "metrics": {
+    "source_rows": 12,
+    "component_units": 112.0,
+    "distinct_codes": 12,
+    "distinct_components": 12,
+    "dimension_coverage_pct": 83.3,
+    "finish_coverage_pct": 91.7,
+    "review_rows": 2
+  },
+  "review_flags": [
+    "2 row(s) have no dimensional attribute.",
+    "1 row(s) have no finish attribute."
+  ]
+}
