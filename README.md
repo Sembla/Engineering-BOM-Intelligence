@@ -2,44 +2,75 @@
 
 [![Tests](https://github.com/Sembla/Engineering-BOM-Intelligence/actions/workflows/tests.yml/badge.svg)](https://github.com/Sembla/Engineering-BOM-Intelligence/actions/workflows/tests.yml)
 
-A tested Python and Streamlit prototype for validating engineering BOM data, calculating material consumption and estimating cost using explicit measurement rules.
+A tested Python and Streamlit project for turning CAD-exported bills of materials into normalized, reviewable engineering data. It also supports deterministic material-consumption and estimated-cost calculations for already normalized BOMs.
 
-This project is connected to a real engineering problem: area-based materials, linear profiles and unit components cannot be costed with the same formula. The calculation engine therefore supports three measurement bases and keeps the business rules separate from the interface.
+## The real workflow behind the project
 
-> All bundled data is synthetic. Cost results are estimates for demonstration and are not production quotations.
+This repository was motivated by a real workflow in which parametric information from a BricsCAD project was exported to a structured BOM. The public repository intentionally does not reproduce the original field names, codes, component vocabulary or measurements.
+
+The public implementation recreates the reusable integration layer:
+
+1. detect a neutral CAD-style CSV export;
+2. map public generic fields to a stable data contract;
+3. validate quantities and dimensional fields;
+4. classify components with transparent rules;
+5. calculate coverage and review indicators;
+6. export a normalized BOM for downstream analysis.
+
+> The original project BOM and its mapping rules are not included. The bundled sample and public schema were created from scratch with generic field names and fictional values. They contain no employer, client, catalogue or production-project information.
 
 ## What the project demonstrates
 
-- Input validation with actionable error messages.
+- A CAD-specific import adapter instead of a manually rewritten spreadsheet.
+- Automatic detection of raw CAD and normalized engineering schemas.
+- A neutral public schema that is independent from the original export vocabulary.
+- Numeric validation with actionable source-row messages.
+- Component classification and material inference using explicit rules.
+- Dimension and finish coverage metrics for data-quality review.
 - Separate calculations for `area_m2`, `linear_m` and `unit` components.
-- Waste-factor application and estimated-cost calculation.
-- Material-level summaries and transparent rule-based review flags.
-- CSV/XLSX upload and calculated CSV export.
-- A calculation engine that can be tested without Streamlit.
+- CSV/XLSX upload, normalized CSV export and automated unit tests.
 
 ## Architecture
 
 ```mermaid
 flowchart TD
-    A[CSV or XLSX] --> B[Schema validation]
-    B --> C[Deterministic BOM engine]
-    C --> D[Metrics and material summary]
-    D --> E[Streamlit interface and CSV export]
+    A["BricsCAD BOM export"] --> B["CAD adapter"]
+    C["Normalized CSV or XLSX"] --> D["Schema validation"]
+    B --> D
+    D --> E["Quality metrics"]
+    D --> F["BOM calculations"]
+    E --> G["Streamlit review and export"]
+    F --> G
 ```
 
 | Component | Responsibility |
 |---|---|
-| `bom_engine.py` | Validation, measurement rules, calculations, summaries and review flags |
-| `app.py` | Upload, filters, metrics, tables and export interface |
-| `tests/test_bom_engine.py` | Unit tests for formulas and validation boundaries |
+| `cad_adapter.py` | Neutral CAD detection, normalization and deterministic quality flags |
+| `bom_engine.py` | Measurement rules, consumption, estimated cost and material summaries |
+| `app.py` | Synthetic demo, uploads, metrics, review tabs and CSV export |
+| `data/sample_cad_bom.csv` | Fictional sample using a neutral public schema |
+| `tests/` | Formula, schema, adapter and quality-boundary tests |
 
-## Data contract
+## Accepted input 1: neutral public CAD schema
+
+Only three columns are mandatory. Dimension and finish columns are optional.
+
+| Raw column | Normalized meaning |
+|---|---|
+| `item_id` | Fictional or externally sanitized item identifier |
+| `item_description` | Generic public description |
+| `quantity` | Component quantity |
+| `row_id` | Optional source row identifier |
+| `dimension_x_mm`, `dimension_y_mm`, `dimension_z_mm` | Optional generic dimensions |
+| `finish_primary`, `finish_secondary` | Optional generic finish attributes |
+
+CAD rows enter the calculation engine with `measure_basis=unit` and zero cost. A private organization-specific mapping layer would be required before using an internal export; that mapping is deliberately outside this repository.
+
+## Accepted input 2: normalized costing BOM
 
 | Column | Description |
 |---|---|
-| `item` | Component name |
-| `family` | Product or assembly family |
-| `component_type` | Engineering classification |
+| `item`, `family`, `component_type` | Component identity and engineering classification |
 | `width_mm`, `height_mm` | Dimensions used by `area_m2` rows |
 | `length_mm` | Dimension used by `linear_m` rows |
 | `quantity` | Required component count; must be greater than zero |
@@ -47,8 +78,6 @@ flowchart TD
 | `measure_basis` | `area_m2`, `linear_m` or `unit` |
 | `unit_cost` | Cost per selected measurement basis |
 | `waste_pct` | Additional purchasing allowance |
-
-No engineering dimensions or price tables are bundled in this public repository. The numeric examples used by the automated tests are synthetic and exist only to verify the formulas.
 
 ## Run locally
 
@@ -59,11 +88,13 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-On Windows PowerShell, activate the environment with:
+On Windows PowerShell:
 
 ```powershell
 .venv\Scripts\Activate.ps1
 ```
+
+The app opens with the fictional CAD sample when no upload is supplied, so the workflow can be evaluated immediately.
 
 ## Run the tests
 
@@ -71,9 +102,7 @@ On Windows PowerShell, activate the environment with:
 python -m unittest discover -s tests -v
 ```
 
-The tests cover all three cost bases, aggregate metrics, schema validation, invalid values and review flags.
-
-The same test suite runs automatically on every push and pull request through GitHub Actions.
+The suite covers the three costing bases, validation boundaries, neutral CAD-schema detection, normalization, quality metrics and review flags. GitHub Actions runs it on every push and pull request.
 
 ## Calculation model
 
@@ -96,19 +125,21 @@ purchase measure = base measure × quantity × (1 + waste_pct ÷ 100)
 estimated cost = purchase measure × unit_cost
 ```
 
-## Limitations
+## Boundaries
 
+- This is a neutral CSV/XLSX demonstration, not a live BricsCAD API integration.
+- Employer-specific field mappings and component vocabulary are intentionally excluded.
 - The project does not generate cutting plans or nesting layouts.
 - Cost tables are supplied by the user and are not connected to an ERP.
-- Review flags are deterministic rules, not AI-generated engineering decisions.
-- Uploaded files are processed in the active Streamlit session and are not persisted by this prototype.
+- Review flags are deterministic and do not replace engineering validation.
+- Uploaded files are processed in the active Streamlit session and are not persisted.
 
 ## Next engineering steps
 
-- Add unit normalization and currency configuration.
-- Introduce versioned price tables.
-- Add CAD/ERP import adapters.
-- Generate traceable calculation logs for audit and quotation workflows.
+- Add configurable mappings for other CAD export templates.
+- Introduce versioned price tables and currency configuration.
+- Add ERP adapters and traceable calculation logs.
+- Compare BOM revisions and highlight changed quantities or attributes.
 
 ## Author
 
